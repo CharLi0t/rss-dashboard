@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ข่าวเศรษฐกิจไทย - Whisper2Wealth RSS Dashboard</title>
+  <title>Whisper2Wealth RSS Dashboard</title>
   <style>
     body {
       font-family: sans-serif;
       background: #f1f5f9;
       padding: 2rem;
       color: #333;
-      max-width: 800px;
+      max-width: 1000px;
       margin: auto;
     }
-    h1 {
+    h1, h2 {
       color: #2b6777;
-      text-align: center;
     }
     .entry {
       background: #fff;
@@ -32,49 +31,83 @@
       font-size: 0.9rem;
       color: #777;
     }
+    .group {
+      margin-bottom: 3rem;
+    }
   </style>
 </head>
 <body>
-  <h1>📡 ข่าว \"เศรษฐกิจไทย\" ล่าสุด</h1>
-  <div id="feed">⏳ กำลังโหลด...</div>
+  <h1>📡 Whisper2Wealth RSS Dashboard</h1>
+
+  <div class="group">
+    <h2>💸 ข่าว "เศรษฐกิจไทย"</h2>
+    <div id="feed-econ">⏳ กำลังโหลด...</div>
+  </div>
+
+  <div class="group">
+    <h2>📈 ข่าว "การลงทุน"</h2>
+    <div id="feed-invest">⏳ กำลังโหลด...</div>
+  </div>
+
+  <div class="group">
+    <h2>💰 ข่าว "การเงิน"</h2>
+    <div id="feed-finance">⏳ กำลังโหลด...</div>
+  </div>
 
   <script>
-    const proxy = "https://api.allorigins.win/get?url=";
-    const rssUrl = encodeURIComponent("https://www.google.com/alerts/feeds/05439235326638475098/16731670244623021494");
-    const feedUrl = proxy + rssUrl;
+    const feeds = [
+      {
+        id: 'feed-econ',
+        url: 'https://www.google.com/alerts/feeds/05439235326638475098/16731670244623021494'
+      },
+      {
+        id: 'feed-invest',
+        url: 'https://www.google.com/alerts/feeds/05439235326638475098/7512465461129647404'
+      },
+      {
+        id: 'feed-finance',
+        url: 'https://www.google.com/alerts/feeds/05439235326638475098/16731670244623022442'
+      }
+    ];
 
-    fetch(feedUrl)
-      .then(response => response.json())
-      .then(data => {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(data.contents, "text/xml");
-        const items = xmlDoc.getElementsByTagName("entry");
+    feeds.forEach(feed => {
+      const proxy = "https://api.allorigins.win/get?url=";
+      const encodedUrl = encodeURIComponent(feed.url);
+      const fullUrl = proxy + encodedUrl;
 
-        const feedContainer = document.getElementById("feed");
-        feedContainer.innerHTML = "";
+      fetch(fullUrl)
+        .then(response => response.json())
+        .then(data => {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(data.contents, "text/xml");
+          const items = xmlDoc.getElementsByTagName("entry");
 
-        if (items.length === 0) {
-          feedContainer.innerHTML = "<p>🙁 ไม่พบรายการข่าวในขณะนี้</p>";
-        }
+          const container = document.getElementById(feed.id);
+          container.innerHTML = "";
 
-        for (let item of items) {
-          const title = item.getElementsByTagName("title")[0].textContent;
-          const link = item.getElementsByTagName("link")[0].getAttribute("href");
-          const date = item.getElementsByTagName("updated")[0].textContent;
+          if (items.length === 0) {
+            container.innerHTML = "<p>🙁 ไม่พบรายการข่าว</p>";
+          }
 
-          const div = document.createElement("div");
-          div.className = "entry";
-          div.innerHTML = `
-            <h3><a href="${link}" target="_blank">${title}</a></h3>
-            <time>${new Date(date).toLocaleString("th-TH")}</time>
-          `;
-          feedContainer.appendChild(div);
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("feed").innerHTML = "<p>❌ ไม่สามารถโหลดฟีดได้</p>";
-      });
+          for (let item of items) {
+            const title = item.getElementsByTagName("title")[0].textContent;
+            const link = item.getElementsByTagName("link")[0].getAttribute("href");
+            const date = item.getElementsByTagName("updated")[0].textContent;
+
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.innerHTML = `
+              <h3><a href="${link}" target="_blank">${title}</a></h3>
+              <time>${new Date(date).toLocaleString("th-TH")}</time>
+            `;
+            container.appendChild(div);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById(feed.id).innerHTML = "<p>❌ ไม่สามารถโหลดฟีดได้</p>";
+        });
+    });
   </script>
 </body>
 </html>
